@@ -1,20 +1,14 @@
-import mysql.connector
+from db import create_db_and_tables, engine
+from sqlmodel import Session, select
+from models import Weapon
 
-cnx = mysql.connector.connect(
-    user="root",
-    password="",
-    host="127.0.0.1",
-    database="classicmodels"
-)
+create_db_and_tables()
 
-print("Connected! Server version:", cnx.get_server_info())
+with Session(engine) as session:
+    weapon = Weapon(name="AK-47", type="firearm", price=3500)
+    session.add(weapon)
+    session.commit()
 
-cursor = cnx.cursor()
-
-cursor.execute("SELECT * FROM customers")
-
-data=  cursor.fetchall()
-
-
-cursor.close()
-cnx.close()
+with Session(engine) as session:
+    result = session.exec(select(Weapon)).all()
+    print(result)
