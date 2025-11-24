@@ -1,18 +1,26 @@
-from fastapi import FastAPI
-from db import create_db_and_tables
-from api.routes_customers import router as customers_router
-from api.routes_orders import router as orders_router
+from fastapi import FastAPI, Depends, HTTPException
+from sqlmodel import Session, select
+from db import create_db_and_tables, get_session
+from models import Customer
 
 app = FastAPI()
-
-# connect to sql server
 create_db_and_tables()
 
-# Routers (new for students hermon :) )
-app.include_router(customers_router)
-app.include_router(orders_router)
 
-# Root
+#      GET ALL
+@app.get("/customers")
+def get_customers(session: Session = Depends(get_session)):
+    customers = session.exec(select(Customer)).all()
+    return customers
+
+#   GET BY ID
+@app.get("/customers/{customer_id}")
+def get_customer_by_id(customer_id: int, session: Session = Depends(get_session)):
+    customer = session.get(Customer, customer_id)
+    if not customer:
+        raise HTTPException(status_code=404, detail="Customer not found")
+    return customer
+
 @app.get("/")
-def healthcheck():
-    return {"status": "server run ok"}
+def health():
+    return {"status": "ok"}
